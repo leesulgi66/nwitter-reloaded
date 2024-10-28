@@ -1,3 +1,7 @@
+import PostTweetForm from "../components/post-tweet-form";
+
 export default function Home() {
-    return (<h1></h1>);
+    return (<>
+        <PostTweetForm />
+    </>);
 }
