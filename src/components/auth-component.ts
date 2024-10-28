@@ -34,6 +34,9 @@ export const Input = styled.input`
             opacity: 0.8;
         }
     }
+    &.log-in{
+        background-color: dodgerblue;
+    }
 `;
 
 export const Error = styled.span`
