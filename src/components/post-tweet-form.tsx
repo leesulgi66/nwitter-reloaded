@@ -1,7 +1,8 @@
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, updateDoc } from "firebase/firestore";
 import { useState } from "react";
 import styled from "styled-components"
-import { auth, db } from "../firebase";
+import { auth, db, storage } from "../firebase";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 const Form = styled.form`
     display: flex;
@@ -68,7 +69,11 @@ export default function PostTweetForm() {
     const onFileChange = (e: React.ChangeEvent<HTMLInputElement>)=> {
         const{files} = e.target;
         if(files && files.length === 1) {
-            setFile(files[0]);
+            if(files[0].size < 1*1024*1024){
+                setFile(files[0]);
+            }else {
+                alert("image file size should be less than 1Mb");
+            }
         }
     }
     const onSubmit = async(e:React.FormEvent<HTMLFormElement>) => {
@@ -76,13 +81,23 @@ export default function PostTweetForm() {
         const user = auth.currentUser
         if(!user || isLoading || tweet ==="" || tweet.length > 180) return;
         try {
-            await addDoc(collection(db, "tweets"), {
+            setLoading(true);
+            const doc = await addDoc(collection(db, "tweets"), {
                 tweet,
                 createAt:Date.now(),
                 username: user.displayName || "Anonymous",
                 userId: user.uid,
             });
-            setLoading(true);
+            if(file) { // file을 업로드 후 url주소 받기
+                const locationRef = ref(storage, `tweets/${user.uid}-${user.displayName}/${doc.id}`); //img file의 경로를 설정
+                const result = await uploadBytes(locationRef, file); //promise를 반환하고, 그 결과값에 업로드 결과에 대한 참조가 있다.
+                const url = await getDownloadURL(result.ref); //result 값을 참조해 url주소를 반환받는다.
+                console.log(url);
+                await updateDoc(doc, {photo: url}); // 위에서 추가한 doc에 photo항목을 추가해 준다.
+            }
+            setTweet("");
+            setFile(null);
+
         }catch(e) {
             console.log(e);
         }finally {
@@ -90,7 +105,7 @@ export default function PostTweetForm() {
         }
     }
     return <Form onSubmit={onSubmit}>
-        <TextArea rows={5} maxLength={180} onChange={onChange} value={tweet} placeholder="What is happening?!"/>
+        <TextArea rows={5} maxLength={180} onChange={onChange} value={tweet} placeholder="What is happening?!" required/>
         <AttachFileButton htmlFor="file">{file ? "Potho added✔" : "Add photo"}</AttachFileButton>
         <AttachFileInput onChange={onFileChange} type="file" id="file" accept="image/*"/>
         <SubmitBtn type="submit" value={isLoading ? "Posting..." : "Post Tweet"}/>
