@@ -47,6 +47,9 @@ const GlobalStyles = createGlobalStyle`
     background-color: black;
     color: white;
   }
+  ::-webkit-scrollbar{
+        display: none;
+    }
 `;
 
 const Wrapper = styled.div`
