@@ -22,38 +22,39 @@ const Wrapper = styled.div`
 
 export default function Timeline() {
     const [tweets, setTweet] = useState<ITweet[]>([]);
+    const fetchTweets = async()=> {
+        const tweetsQuery = query(
+            collection(db, "tweets"),
+            orderBy("createAt", "desc"),
+            limit(25),
+        );
+        const snapshot = await getDocs(tweetsQuery);
+        const tweets = snapshot.docs.map((doc)=>{
+            const {tweet, createdAt, userId, username, photo} = doc.data();
+            return {
+                tweet, createdAt, userId, username, photo, id:doc.id
+            };
+        });
+        setTweet(tweets);
+    }
     useEffect(()=>{
-        let unsubscribe : Unsubscribe | null = null;
-        const fetchTweets = async()=> {
-            const tweetsQuery = query(
-                collection(db, "tweets"),
-                orderBy("createAt", "desc"),
-                limit(25),
-            );
-            // 불러온 쿼리요소들을 맞추어 반환
-            // const snapshot = await getDocs(tweetsQuery);
-            // const tweets = snapshot.docs.map((doc)=>{
-            //     const {tweet, createdAt, userId, username, photo} = doc.data();
-            //     return {
-            //         tweet, createdAt, userId, username, photo, id:doc.id
-            //     };
-            // });
-            // setTweet(tweets);
         // onSnapshot을 이용한 실시간 연결(다만 쿼리의 양이 많아 무료사용시 제한이 걸린다.)
-            unsubscribe = await onSnapshot(tweetsQuery, (snapshot)=>{
-                const tweets = snapshot.docs.map((doc)=>{
-                    const {tweet, createdAt, userId, username, photo} = doc.data();
-                    return {
-                        tweet, createdAt, userId, username, photo, id:doc.id
-                    };
-                });
-                setTweet(tweets);
-            });
-        };
+        // let unsubscribe : Unsubscribe | null = null;
+        //     unsubscribe = await onSnapshot(tweetsQuery, (snapshot)=>{
+        //         const tweets = snapshot.docs.map((doc)=>{
+        //             const {tweet, createdAt, userId, username, photo} = doc.data();
+        //             return {
+        //                 tweet, createdAt, userId, username, photo, id:doc.id
+        //             };
+        //         });
+        //         setTweet(tweets);
+        //     });
+        // };
+        // fetchTweets();
+        // return ()=>{
+        //     unsubscribe && unsubscribe();
+        // }
         fetchTweets();
-        return ()=>{
-            unsubscribe && unsubscribe();
-        }
-    }, []);
+    });
     return <Wrapper>{tweets.map(tweet => <Tweet key={tweet.id} {...tweet} />)}</Wrapper>
 }
