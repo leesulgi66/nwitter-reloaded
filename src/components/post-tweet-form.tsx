@@ -89,7 +89,7 @@ export default function PostTweetForm() {
                 userId: user.uid,
             });
             if(file) { // file을 업로드 후 url주소 받기
-                const locationRef = ref(storage, `tweets/${user.uid}-${user.displayName}/${doc.id}`); //img file의 경로를 설정
+                const locationRef = ref(storage, `tweets/${user.uid}/${doc.id}`); //img file의 경로를 설정
                 const result = await uploadBytes(locationRef, file); //promise를 반환하고, 그 결과값에 업로드 결과에 대한 참조가 있다.
                 const url = await getDownloadURL(result.ref); //result 값을 참조해 url주소를 반환받는다.
                 console.log(url);
