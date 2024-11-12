@@ -1,8 +1,9 @@
 import styled from "styled-components";
 import { ITweet } from "./timeline";
 import { auth, db, storage } from "../firebase";
-import { deleteDoc, doc } from "firebase/firestore";
+import { collection, deleteDoc, doc, setDoc, updateDoc } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
+import { useState } from "react";
 
 const Wrapper = styled.div`
     display: grid;
@@ -43,8 +44,45 @@ const DeleteButton = styled.button`
     cursor: pointer;
 `;
 
+const EditButton = styled.button`
+    background-color: #a1a1a14f;
+    color: white;
+    font-weight: 600;
+    border: 0;
+    font-size: 12px;
+    margin-left: 5px;
+    padding: 5px 10px;
+    text-transform: uppercase;
+    border-radius: 5px;
+    cursor: pointer;
+`;
+
+const TextArea = styled.textarea`
+    border: 2px solid white;
+    padding: 20px;
+    border-radius: 20px;
+    font-size: 16px;
+    color: white;
+    background-color: black;
+    width: 100%;
+    resize: none;
+    &::placeholder {
+        font-size: 16px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    &:focus {
+        outline: none;
+        border-color: #1d9bf0;
+    }
+`;
+
 export default function Tweet({username, photo, tweet, userId, id}:ITweet) {
+    const [isEditing, setEditing] = useState(false);
+    const [isTweet, setIsTweet] = useState(tweet);
     const user = auth.currentUser;
+    const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setIsTweet(e.target.value);
+    }
     const onDelete = async() => {
         const ok = confirm("Are you sure you want to delete this tweet?");
         if(!ok || user?.uid !== userId) return;
@@ -60,11 +98,45 @@ export default function Tweet({username, photo, tweet, userId, id}:ITweet) {
 
         }
     }
+    const onEdit = () => {
+        if(user?.uid !== userId) return;
+        setEditing(true);
+    }
+
+    const onEditDone = async() => {
+        const ok = confirm("Are you sure you want to edit this tweet?");
+        if(!ok || user?.uid !== userId) return;
+        tweet = isTweet;
+        console.log(isTweet);
+        console.log(tweet);
+        try {
+            await setDoc(doc(db, `tweets/${id}`), {
+                tweet,
+                createAt:Date.now(),
+                username: user.displayName || "Anonymous",
+                userId: user.uid,
+            });
+            // if(file) { // file을 업로드 후 url주소 받기
+            //     const locationRef = ref(storage, `tweets/${user.uid}/${doc.id}`); //img file의 경로를 설정
+            //     const result = await uploadBytes(locationRef, file); //promise를 반환하고, 그 결과값에 업로드 결과에 대한 참조가 있다.
+            //     const url = await getDownloadURL(result.ref); //result 값을 참조해 url주소를 반환받는다.
+            //     console.log(url);
+            //     await updateDoc(doc, {photo: url}); // 위에서 추가한 doc에 photo항목을 추가해 준다.
+            // }
+            //setFile(null);
+        }catch(e) {
+            console.log(e);
+        }finally {
+            setEditing(false);
+        }
+    }
     return <Wrapper>
         <Column>
             <Username>{username}</Username>
-            <Payload>{tweet}</Payload>
+            <Payload>{isEditing ? <TextArea onChange={onChange} rows={1} maxLength={180} value={isTweet} required/>:tweet}</Payload>
             {user?.uid === userId ? <DeleteButton onClick={onDelete}>Delete</DeleteButton> : null}
+            {user?.uid === userId ? <EditButton onClick={onEdit}>Edit</EditButton> : null}
+            {user?.uid === userId && isEditing ? <EditButton onClick={onEditDone}>Done</EditButton> : null}
         </Column> 
         <Column>{photo ? <Photo src={photo} /> : null}</Column>
     </Wrapper>
