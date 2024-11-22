@@ -1,8 +1,8 @@
 import { addDoc, collection, updateDoc } from "firebase/firestore";
 import { useState } from "react";
 import styled from "styled-components"
-import { auth, db, storage } from "../firebase";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { auth, db } from "../firebase";
+import AWS from 'aws-sdk';
 
 const Form = styled.form`
     display: flex;
@@ -60,6 +60,20 @@ const SubmitBtn = styled.input`
 `;
 
 export default function PostTweetForm() {
+    const ACCESS_KEY = import.meta.env.VITE_ACCESS_KEY
+    const SECRET_KEY = import.meta.env.VITE_SECRET_KEY
+    const RESION = "ap-northeast-2";
+    const S3_BUKKET = "sulgibucket";
+    AWS.config.update({
+        accessKeyId: ACCESS_KEY,
+        secretAccessKey: SECRET_KEY,
+    });
+    const myBuket = new AWS.S3({
+        params: { Buket: S3_BUKKET },
+        region: RESION,
+    });
+    console.log(AWS.config);
+    console.log(myBuket);
     const [isLoading, setLoading] = useState(false);
     const [tweet, setTweet] = useState("");
     const [file, setFile] = useState<File | null>(null);
@@ -89,11 +103,29 @@ export default function PostTweetForm() {
                 userId: user.uid,
             });
             if(file) { // file을 업로드 후 url주소 받기
-                const locationRef = ref(storage, `tweets/${user.uid}/${doc.id}`); //img file의 경로를 설정
-                const result = await uploadBytes(locationRef, file); //promise를 반환하고, 그 결과값에 업로드 결과에 대한 참조가 있다.
-                const url = await getDownloadURL(result.ref); //result 값을 참조해 url주소를 반환받는다.
-                console.log(url);
-                await updateDoc(doc, {photo: url}); // 위에서 추가한 doc에 photo항목을 추가해 준다.
+                // //firestore 방법
+                // const locationRef = ref(storage, `tweets/${user.uid}/${doc.id}`); //img file의 경로를 설정
+                // const result = await uploadBytes(locationRef, file); //promise를 반환하고, 그 결과값에 업로드 결과에 대한 참조가 있다.
+                // const url = await getDownloadURL(result.ref); //result 값을 참조해 url주소를 반환받는다.
+                // console.log(url);
+                // await updateDoc(doc, {photo: url}); // 위에서 추가한 doc에 photo항목을 추가해 준다.
+
+                //S3 upload
+                const params = {
+                    ACL : "public-read",
+                    Body : file,
+                    Bucket : S3_BUKKET,
+                    ContentType: file.type,
+                    Key : "upload/" + file.name,
+                };
+                
+                await myBuket.upload(params, (error:any)=>{
+                    console.log(error);
+                }).promise().then((data)=>{
+                    const url = data.Location;
+                    console.log(url);
+                    updateDoc(doc, {photo: url});
+                });
             }
             setTweet("");
             setFile(null);

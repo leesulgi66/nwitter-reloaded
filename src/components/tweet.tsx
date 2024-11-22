@@ -107,8 +107,6 @@ export default function Tweet({username, photo, tweet, userId, id}:ITweet) {
         const ok = confirm("Are you sure you want to edit this tweet?");
         if(!ok || user?.uid !== userId) return;
         tweet = isTweet;
-        console.log(isTweet);
-        console.log(tweet);
         try {
             await setDoc(doc(db, `tweets/${id}`), {
                 tweet,
