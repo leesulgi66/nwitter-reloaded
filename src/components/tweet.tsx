@@ -113,6 +113,7 @@ export default function Tweet({username, photo, tweet, userId, id}:ITweet) {
                 createAt:Date.now(),
                 username: user.displayName || "Anonymous",
                 userId: user.uid,
+                photo: photo,
             });
             // if(file) { // file을 업로드 후 url주소 받기
             //     const locationRef = ref(storage, `tweets/${user.uid}/${doc.id}`); //img file의 경로를 설정
