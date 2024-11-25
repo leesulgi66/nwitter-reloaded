@@ -55,7 +55,7 @@ export default function Timeline() {
         //     unsubscribe && unsubscribe();
         // }
         fetchTweets();
-        console.log("effect");
+        console.log("effect check");
     }, []);
     return <Wrapper>{tweets.map(tweet => <Tweet key={tweet.id} {...tweet} />)}</Wrapper>
 }

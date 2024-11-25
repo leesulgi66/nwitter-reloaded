@@ -89,9 +89,9 @@ export default function Tweet({username, photo, tweet, userId, id}:ITweet) {
         try{
             await deleteDoc(doc(db, "tweets", id)); // 트윗 삭제
             if(photo) { // 사진이 있을 경우(
-                const photoRef = ref(storage, `tweets/${user.uid}/${id}`);
-                await deleteObject(photoRef);
+                console.log(photo);
             }
+            window.location.reload();
         }catch(e){
             console.log(e);
         }finally {
@@ -107,6 +107,11 @@ export default function Tweet({username, photo, tweet, userId, id}:ITweet) {
         const ok = confirm("Are you sure you want to edit this tweet?");
         if(!ok || user?.uid !== userId) return;
         tweet = isTweet;
+        if(photo) {
+            photo = photo
+        }else {
+            photo = "";
+        }
         try {
             await setDoc(doc(db, `tweets/${id}`), {
                 tweet,
@@ -123,6 +128,7 @@ export default function Tweet({username, photo, tweet, userId, id}:ITweet) {
             //     await updateDoc(doc, {photo: url}); // 위에서 추가한 doc에 photo항목을 추가해 준다.
             // }
             //setFile(null);
+            window.location.reload();
         }catch(e) {
             console.log(e);
         }finally {

@@ -72,8 +72,6 @@ export default function PostTweetForm() {
         params: { Buket: S3_BUKKET },
         region: RESION,
     });
-    console.log(AWS.config);
-    console.log(myBuket);
     const [isLoading, setLoading] = useState(false);
     const [tweet, setTweet] = useState("");
     const [file, setFile] = useState<File | null>(null);
@@ -129,6 +127,7 @@ export default function PostTweetForm() {
             }
             setTweet("");
             setFile(null);
+            window.location.reload();
 
         }catch(e) {
             console.log(e);
