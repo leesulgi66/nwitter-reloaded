@@ -1,8 +1,11 @@
 import styled from "styled-components";
-import { auth } from "../firebase"
-import React, { useState } from "react";
+import { auth, db } from "../firebase"
+import React, { useEffect, useState } from "react";
 import AWS from 'aws-sdk';
 import { updateProfile } from "firebase/auth";
+import { collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
+import { ITweet } from "../components/timeline";
+import Tweet from "../components/tweet";
 
 const Wrapper = styled.div`
     display: flex;
@@ -34,6 +37,12 @@ const AvatarInput = styled.input`
 const Name = styled.span`
     font-size: 22px;
 `;
+const Tweets = styled.div`
+    display: flex;
+    width:100%;
+    flex-direction: column;
+    gap: 10px;
+`;
 export default function Profile() {
     const ACCESS_KEY = import.meta.env.VITE_ACCESS_KEY
     const SECRET_KEY = import.meta.env.VITE_SECRET_KEY
@@ -50,6 +59,7 @@ export default function Profile() {
 
     const user = auth.currentUser;
     const [avatar, setAvatar] = useState(user?.photoURL);
+    const [tweets, setTweets] = useState<ITweet[]>([]);
     const onAvatarChange = async (e:React.ChangeEvent<HTMLInputElement>) => {
         const {files} = e.target;
         if(!user) return;
@@ -75,6 +85,26 @@ export default function Profile() {
             });
         }
     };
+    const fetchTweets = async()=>{
+        const tweetQuery = query(
+            collection(db, "tweets"),
+            where("userId", "==", user?.uid),
+            orderBy("createAt", "desc"),
+            limit(25)
+        );
+        const snapshot = await getDocs(tweetQuery);
+        const tweets = snapshot.docs.map((doc)=>{
+            const {tweet, createdAt, userId, username, photo} = doc.data();
+            return {
+                tweet, createdAt, userId, username, photo, id:doc.id
+            };
+        });
+        console.log(tweets);
+        setTweets(tweets);
+    };
+    useEffect(()=>{
+        fetchTweets();
+    }, []);
     return (<Wrapper>
         <AvatarUpload htmlFor="avatar">
             {avatar ? <AvatarImg src={avatar} /> : <svg data-slot="icon" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -85,6 +115,9 @@ export default function Profile() {
         <Name>
             {user?.displayName ?? "Anonymous"}
         </Name>
+        <Tweets>
+            {tweets.map(tweet => <Tweet key={tweet.id} {...tweet} />)}
+        </Tweets>
     </Wrapper>
     );
 }
