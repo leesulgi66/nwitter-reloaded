@@ -128,7 +128,6 @@ export default function PostTweetForm() {
             setTweet("");
             setFile(null);
             window.location.reload();
-
         }catch(e) {
             console.log(e);
         }finally {
