@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { ITweet } from "./timeline";
 import { auth, db, storage } from "../firebase";
 import { collection, deleteDoc, doc, setDoc, updateDoc } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
+import AWS from 'aws-sdk';
 import { useState } from "react";
 
 const Wrapper = styled.div`
@@ -76,7 +76,21 @@ const TextArea = styled.textarea`
     }
 `;
 
-export default function Tweet({username, photo, tweet, userId, id}:ITweet) {
+export default function Tweet({username, photo, tweet, userId, id, photoKey}:ITweet) {
+    // s3 settings
+    const ACCESS_KEY = import.meta.env.VITE_ACCESS_KEY
+    const SECRET_KEY = import.meta.env.VITE_SECRET_KEY
+    const RESION = "ap-northeast-2";
+    const S3_BUKKET = "sulgibucket";
+    AWS.config.update({
+        accessKeyId: ACCESS_KEY,
+        secretAccessKey: SECRET_KEY,
+    });
+    const myBuket = new AWS.S3({
+        params: { Buket: S3_BUKKET },
+        region: RESION,
+    });
+    //--------------
     const [isEditing, setEditing] = useState(false);
     const [isTweet, setIsTweet] = useState(tweet);
     const user = auth.currentUser;
@@ -89,7 +103,12 @@ export default function Tweet({username, photo, tweet, userId, id}:ITweet) {
         try{
             await deleteDoc(doc(db, "tweets", id)); // 트윗 삭제
             if(photo) { // 사진이 있을 경우(
-                console.log(photo);
+                if(!photoKey) return;
+                const params = {
+                    Bucket: S3_BUKKET,
+                    Key: photoKey,
+                };
+                myBuket.deleteObject(params, (error:any)=>{console.log(error)});
             }
             window.location.reload();
         }catch(e){

@@ -121,8 +121,9 @@ export default function PostTweetForm() {
                     console.log(error);
                 }).promise().then((data)=>{
                     const url = data.Location;
+                    const key = data.Key;
                     console.log(url);
-                    updateDoc(doc, {photo: url});
+                    updateDoc(doc, {photo: url, photoKey : key});
                 });
             }
             setTweet("");

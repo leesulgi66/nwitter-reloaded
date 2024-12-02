@@ -8,6 +8,7 @@ import { Unsubscribe } from "firebase/auth";
 export interface ITweet {
     id: string;
     photo?: string;
+    photoKey?: string;
     tweet: string;
     userId: string;
     username: string;
@@ -30,9 +31,9 @@ export default function Timeline() {
         );
         const snapshot = await getDocs(tweetsQuery);
         const tweets = snapshot.docs.map((doc)=>{
-            const {tweet, createdAt, userId, username, photo} = doc.data();
+            const {tweet, createdAt, userId, username, photo, photoKey} = doc.data();
             return {
-                tweet, createdAt, userId, username, photo, id:doc.id
+                tweet, createdAt, userId, username, photo, id:doc.id, photoKey
             };
         });
         setTweet(tweets);

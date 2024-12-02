@@ -119,8 +119,8 @@ export default function Profile() {
                 console.log(error);
             }).promise().then((data) => {
                 const url = data.Location;
+                const photoKey = data.Key;
                 updateProfile(user, { photoURL: url });
-                console.log(url);
                 setAvatar(url);
                 window.location.reload();
             });
