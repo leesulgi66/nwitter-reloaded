@@ -14,18 +14,22 @@ import ProtectedRoute from "./components/protected-route";
 const router = createBrowserRouter([
   {
     path:"/",
-    element: <ProtectedRoute>
-      <Layout />
-    </ProtectedRoute>,
+    element: <Layout />,
     children: [
       {
         path: "",
-        element: <Home />,
+        element: 
+        <ProtectedRoute>
+          <Home />
+        </ProtectedRoute>,
       },
       {
         path: "profile",
-        element: <Profile />,
-      }
+        element: 
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
+      },
     ]
   },
   {
@@ -44,35 +48,33 @@ const GlobalStyles = createGlobalStyle`
     box-sizing: border-box;
   }
   body {
-    background-color: black;
+    background-color: #000716;
     color: white;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+
   }
   ::-webkit-scrollbar{
-        display: none;
-    }
+    display: none;
+  }
 `;
 
 const Wrapper = styled.div`
-  height: 100vh;
-  display:flex;
+  height: 100hv;
+  display: flex;
   justify-content: center;
 `;
 
 function App() {
-  const [isLoading, setLoading] = useState(true);
+  const [isLoading, setLading] = useState(true);
   const init = async() => {
     await auth.authStateReady();
-    setLoading(false);
+    setLading(false);
   }
-  useEffect(() => {
-    init();
-  }, [])
-  return( 
-  <Wrapper>
+  useEffect(()=>{init();},[])
+  return <Wrapper>
     <GlobalStyles />
     {isLoading ? <LoadingScreen /> : <RouterProvider router={router} />}
-  </Wrapper>
-  );
+  </ Wrapper>
 }
 
 export default App
